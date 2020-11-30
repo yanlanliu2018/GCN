@@ -1,8 +1,8 @@
-from include.Config import Config
+from CL.include.Config import Config
 import tensorflow as tf
-from include.Model import build_SE, training, combine
-from include.Test import get_hits, get_hits_select, get_combine_hits_select_correct, solely_measure
-from include.Load import *
+from CL.include.Model import build_SE, training, combine
+from CL.include.Test import get_hits, get_hits_select, get_combine_hits_select_correct, solely_measure
+from CL.include.Load import *
 import copy
 import numpy as np
 import math

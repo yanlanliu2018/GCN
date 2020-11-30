@@ -1,10 +1,11 @@
 import math
 from .Init import *
 import copy
-from include.Config import Config
+from CL.include.Config import Config
 import numpy as np
-from include.Load import *
+from CL.include.Load import *
 
+# 正向重要度
 def func(KG):
 	head = {}  #关系-关系对应的头节点的非重复集合
 	cnt = {}   #关系-关系对应的三元组的个数
@@ -20,7 +21,7 @@ def func(KG):
 		r2f[r] = len(head[r]) / cnt[r]
 	return r2f
 
-
+# 反向重要度
 def ifunc(KG):
 	tail = {}
 	cnt = {}
@@ -39,19 +40,23 @@ def ifunc(KG):
 
 #矩阵  Matrix
 #构建矩阵A
+# KG:知识图谱
+# e：实体的个数
 def get_mat(e, KG):
 	r2f = func(KG)
 	r2if = ifunc(KG)
-	du = [1] * e
+	du = [1] * e # 记录每个实体的度，入度和出度都加在一起
 	for tri in KG:
 		if tri[0] != tri[2]:
 			du[tri[0]] += 1
 			du[tri[2]] += 1
-	M = {}  #（x，y）-value
+	M = {}  #矩阵使用字典来进行存储，（x，y）-value，（x，y）：包含行和列下标的元组，value：矩阵中具体的值
 	for tri in KG:
 		if tri[0] == tri[2]:
 			continue
 		if (tri[0], tri[2]) not in M:
+			# 为什么要开四次方？
+			# 应该是因为 r2if[tri[1]] 的值太小，不利于实验的计算，因此用多次平方后的值来代替直接比值。
 			M[(tri[0], tri[2])] = math.sqrt(math.sqrt(math.sqrt(math.sqrt(r2if[tri[1]]))))
 		else:
 			M[(tri[0], tri[2])] += math.sqrt(math.sqrt(math.sqrt(math.sqrt(r2if[tri[1]]))))
@@ -65,16 +70,17 @@ def get_mat(e, KG):
 
 
 # get a sparse tensor based on relational triples（得到基于关系三元组的稀疏张量）
-#e：实体的个数，KG知识图谱三元组的集合
+#e：实体的个数
+# KG：知识图谱三元组的集合
 def get_sparse_tensor(e, KG):
 	print('getting a sparse tensor...')
 	M, du = get_mat(e, KG)
-	ind = []
-	val = []
-	#矩阵中的坐标
+	ind = []  # 用于存储矩阵中的坐标，前面得到的矩阵M只记录了非0元素，属于稠密矩阵。
+	val = []  # 用于存储坐标对应的值，M[(fir, sec)] / math.sqrt(du[fir]) / math.sqrt(du[sec])
 	for fir, sec in M:
 		ind.append((sec, fir))
 		val.append(M[(fir, sec)] / math.sqrt(du[fir]) / math.sqrt(du[sec]))
+	# 将稠密矩阵转换为稀疏矩阵
 	M = tf.SparseTensor(indices=ind, values=val, dense_shape=[e, e])
 	#https://www.w3cschool.cn/tensorflow_python/tensorflow_python-le4w2kjm.html
 	return M

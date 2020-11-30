@@ -13,9 +13,9 @@ import pickle
 def id2degree():
 	path = './data/' + Config.language + '/mapping/0_3/triples_1'
 	inf2 = open(path)
-	id2fre = dict()
+	id2fre = dict() # 记录头节点和尾节点出现的次数
 	for line in inf2:
-		strs = line.strip().split('\t')
+		strs = line.strip().split('\t') # 四个空格，即一个tab
 		if strs[0] not in id2fre:
 			fre = 0
 		else:

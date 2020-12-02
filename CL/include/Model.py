@@ -88,7 +88,7 @@ def get_sparse_tensor(e, KG):
 
 # add a layer
 def add_diag_layer(inlayer, dimension, M, act_func, dropout=0.0, init=ones):
-	inlayer = tf.nn.dropout(inlayer, 1 - dropout)
+	inlayer = tf.nn.dropout(inlayer, 1 - dropout)  #防止过拟合
 	print('adding a layer...')
 	w0 = init([1, dimension])
 	tosum = tf.sparse_tensor_dense_matmul(M, tf.multiply(inlayer, w0))

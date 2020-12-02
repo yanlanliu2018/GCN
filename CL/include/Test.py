@@ -633,7 +633,7 @@ def get_combine_hits_select_correct1(vec, name_vec, test_pair):
 
 # new measure
 def solely_measure(vec, test_pair, dim):
-	Lvec = tf.placeholder(tf.float32, [None, dim])
+	Lvec = tf.placeholder(tf.float32, [None, dim]) # 获取对齐实体对头节点的
 	Rvec = tf.placeholder(tf.float32, [None, dim])
 
 	he = tf.nn.l2_normalize(Lvec, dim=-1) #??? 规范化啊
@@ -641,10 +641,10 @@ def solely_measure(vec, test_pair, dim):
 	aep = tf.matmul(he, tf.transpose(norm_e_em))
 
 	sess = tf.Session()
-	Lv = np.array([vec[e1] for e1, e2 in test_pair])
-	Lid_record = np.array([e1 for e1, e2 in test_pair])
-	Rv = np.array([vec[e2] for e1, e2 in test_pair])
-	Rid_record = np.array([e2 for e1, e2 in test_pair])
+	Lv = np.array([vec[e1] for e1, e2 in test_pair]) # 获取对齐实体对头节点的向量表示的列表
+	Lid_record = np.array([e1 for e1, e2 in test_pair]) # 获取对齐实体对头节点的实体id值
+	Rv = np.array([vec[e2] for e1, e2 in test_pair]) # 获取对齐实体对尾节点的向量表示的列表
+	Rid_record = np.array([e2 for e1, e2 in test_pair]) # 获取对齐实体对尾节点的实体id值
 	aep_fuse = sess.run(aep, feed_dict = {Lvec: Lv, Rvec: Rv})
 
 	probs = aep_fuse - aep_fuse[range(len(Lid_record)), range(len(Lid_record))].reshape(len(aep_fuse), 1)

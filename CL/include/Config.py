@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 class Config:
-	language = 'en_fr_15k_V1' # dbp_wd_15k_V1 | en_fr_15k_V1 | wk3l_60k/en_de
+	language = 'dbp_wd_15k_V1' # dbp_wd_15k_V1| en_fr_15k_V1 | en_fr_15k_V1 | wk3l_60k/en_de
 	e1 = 'data/' + language + '/mapping/0_3/ent_ids_1'
 	e2 = 'data/' + language + '/mapping/0_3/ent_ids_2'
 	kg1 = 'data/' + language + '/mapping/0_3/triples_1'

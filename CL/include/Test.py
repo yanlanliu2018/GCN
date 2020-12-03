@@ -5,19 +5,19 @@ import tensorflow as tf
 import copy
 
 def cal_performance(ranks, top=10):
-    m_r = sum(ranks) * 1.0 / len(ranks)
-    h_10 = sum(ranks <= top) * 1.0 / len(ranks)
-    mrr = (1. / ranks).sum() / len(ranks)
+    m_r = sum(ranks) * 1.0 / len(ranks)  # m_r：
+    h_10 = sum(ranks <= top) * 1.0 / len(ranks) # h_10: 前10个实体中包含正确实体的比例
+    mrr = (1. / ranks).sum() / len(ranks)  # mrr：平均排序倒数
     return m_r, h_10, mrr
 
 def get_hits(vec, test_pair, outfile, top_k=(1, 10, 50, 100)):
 	Lvec = np.array([vec[e1] for e1, e2 in test_pair])
 	Rvec = np.array([vec[e2] for e1, e2 in test_pair])
-	sim = scipy.spatial.distance.cdist(Lvec, Rvec, metric='cityblock')
+	sim = scipy.spatial.distance.cdist(Lvec, Rvec, metric='cityblock') #计算两者之间的曼哈顿距离，d(i,j) = |xi-xj|+|yi-yj|
 	top_lr = [0] * len(top_k)
 	mrr_sum_l = 0
-	for i in range(Lvec.shape[0]):
-		rank = sim[i, :].argsort()
+	for i in range(Lvec.shape[0]): #最外层维度，即长度
+		rank = sim[i, :].argsort() #
 		rank_index = np.where(rank == i)[0][0]
 		mrr_sum_l = mrr_sum_l + 1.0/(rank_index+1)
 		for j in range(len(top_k)):
@@ -633,23 +633,27 @@ def get_combine_hits_select_correct1(vec, name_vec, test_pair):
 
 # new measure
 def solely_measure(vec, test_pair, dim):
-	Lvec = tf.placeholder(tf.float32, [None, dim]) # 获取对齐实体对头节点的
+	Lvec = tf.placeholder(tf.float32, [None, dim])
 	Rvec = tf.placeholder(tf.float32, [None, dim])
 
 	he = tf.nn.l2_normalize(Lvec, dim=-1) #??? 规范化啊
 	norm_e_em = tf.nn.l2_normalize(Rvec, dim=-1)
-	aep = tf.matmul(he, tf.transpose(norm_e_em))
+	aep = tf.matmul(he, tf.transpose(norm_e_em)) # 两个矩阵相乘，得到的矩阵是：实体对个数*实体对个数
 
 	sess = tf.Session()
-	Lv = np.array([vec[e1] for e1, e2 in test_pair]) # 获取对齐实体对头节点的向量表示的列表
+	Lv = np.array([vec[e1] for e1, e2 in test_pair]) # 获取对齐实体对头节点的向量表示的列表，长度为实体对个数
 	Lid_record = np.array([e1 for e1, e2 in test_pair]) # 获取对齐实体对头节点的实体id值
-	Rv = np.array([vec[e2] for e1, e2 in test_pair]) # 获取对齐实体对尾节点的向量表示的列表
+	Rv = np.array([vec[e2] for e1, e2 in test_pair]) # 获取对齐实体对尾节点的向量表示的列表，长度为实体对个数
 	Rid_record = np.array([e2 for e1, e2 in test_pair]) # 获取对齐实体对尾节点的实体id值
 	aep_fuse = sess.run(aep, feed_dict = {Lvec: Lv, Rvec: Rv})
 
+	# aep_fuse[range(len(Lid_record)), range(len(Lid_record))] : 取对角线的值，得到一个list，1*len
+	# reshape(len(aep_fuse), 1) ： 将矩阵由1*n变为n*1
 	probs = aep_fuse - aep_fuse[range(len(Lid_record)), range(len(Lid_record))].reshape(len(aep_fuse), 1)
 	# only rank those who have correspondings... cause the set is distorted for those above max_correct
-	ranks = (probs >= 0).sum(axis=1)
+
+	# .sum(axis = 1) : 计算每一行的向量之和
+	ranks = (probs >= 0).sum(axis=1)  # 统计每一行值大于等于0的个数
 	print('to be evaluated... ' + str(len(ranks)))
 
 	MR, H10, MRR = cal_performance(ranks, top=10)
@@ -658,22 +662,28 @@ def solely_measure(vec, test_pair, dim):
 	msg = 'Soly measure: Hits@1:%.3f, Hits@10:%.3f, MR:%.3f, MRR:%.3f' % (H1, H10, MR, MRR)
 	print('\n'+msg)
 
+
 # old measure
+# 为什么可以直接对test_pair中的头节点和尾节点进行实体对齐的计算？
+# 因为G1中一共有15000个实体，G2中一共有15000个实体，而完整的testpair一共有15000条数据，说明G1中每个实体必定有一个对应的实体在G2中，且在testpair中一一对应
+# 并且，该文每次迭代计算时都会将找出来的已对齐实体从testpair（即带对齐实体）中剔除，放到train数据中。
+# 所以可以直接对testpair进行对齐工作，而不是从G2中去找G1中实体的对齐实体
 def get_hits_select_ct(vec, test_pair, outfile, id2fre, theta_3, top_k=(1, 10, 50, 100)):
 	Lvec = np.array([vec[e1] for e1, e2 in test_pair])
 	Lid_record = np.array([e1 for e1, e2 in test_pair])
 	Rvec = np.array([vec[e2] for e1, e2 in test_pair])
 	Rid_record = np.array([e2 for e1, e2 in test_pair])
-	sim = cdist(Lvec, Rvec, metric='cityblock')
+	sim = cdist(Lvec, Rvec, metric='cityblock') #计算两者之间的曼哈顿距离，d(i,j) = |xi-xj|+|yi-yj|
 	top_lr = [0] * len(top_k)
 	mrr_sum_l = 0
 	left2right = dict()
 	for i in range(Lvec.shape[0]):
-		rank = sim[i, :].argsort()
+		rank = sim[i, :].argsort()  # argsort（）函数将数组x中的元素从小到大排序，并且取出他们对应的索引
 		lid = Lid_record[i]
 		rid = Rid_record[rank[0]]
 		left2right[lid] = rid
-		rank_index = np.where(rank == i)[0][0]
+		# np.where(rank == i)：输出rank中等于i的元素的下标
+		rank_index = np.where(rank == i)[0][0]  #rank中
 		mrr_sum_l = mrr_sum_l + 1.0/(rank_index+1)
 		for j in range(len(top_k)):
 			if rank_index < top_k[j]:

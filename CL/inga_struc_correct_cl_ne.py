@@ -127,7 +127,7 @@ if __name__ == '__main__':
 	nepath = './data/'+ Config.language + '/mapping/0_3/name_vec_cpm_3.txt'  #Ne（Name_embedding)的向量文件，
 	ne_vec = loadNe(nepath)  # 加载实体名向量所在文件，获取向量矩阵
 	#np.save(storepath + '/ne_vec.npy', ne_vec)  # 以文件的形式保存数组
-	# solely_measure(ne_vec, test, 900) # 单独测量，也就是测量只使用实体名向量来进行对齐的效果
+	solely_measure(ne_vec, test, 900) # 单独测量，也就是测量只使用实体名向量来进行对齐的效果
 
 	# build
 	# ite_counter = 0

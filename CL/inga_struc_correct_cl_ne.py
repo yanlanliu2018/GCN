@@ -141,6 +141,7 @@ if __name__ == '__main__':
 	#outfile.write('Result of SE:\n')
 	#solely_measure(se_vec, test, 900)
 	#outfile.flush()
+
 	dicrank = dict()
 	index1, gap1, truths1, ranks1, index2, gap2, truths2, ranks2 = get_combine_hits_select_correct(se_vec, ne_vec, test, dicrank, len(test))
 

@@ -674,20 +674,30 @@ def get_hits_select_ct(vec, test_pair, outfile, id2fre, theta_3, top_k=(1, 10, 5
 	Rvec = np.array([vec[e2] for e1, e2 in test_pair])
 	Rid_record = np.array([e2 for e1, e2 in test_pair])
 	sim = cdist(Lvec, Rvec, metric='cityblock') #计算两者之间的曼哈顿距离，d(i,j) = |xi-xj|+|yi-yj|
+
+	# 以头节点为待对齐实体进行实验数据统计
 	top_lr = [0] * len(top_k)
 	mrr_sum_l = 0
-	left2right = dict()
-	for i in range(Lvec.shape[0]):
+	left2right = dict() # 用来存储找到的距离最近的实体对
+	for i in range(Lvec.shape[0]): # Lvec.shape[0] : Lvec最外层的维度，即长度
 		rank = sim[i, :].argsort()  # argsort（）函数将数组x中的元素从小到大排序，并且取出他们对应的索引
 		lid = Lid_record[i]
-		rid = Rid_record[rank[0]]
+		rid = Rid_record[rank[0]] # rank中排序在第一位的对应的实体id
 		left2right[lid] = rid
 		# np.where(rank == i)：输出rank中等于i的元素的下标
-		rank_index = np.where(rank == i)[0][0]  #rank中
-		mrr_sum_l = mrr_sum_l + 1.0/(rank_index+1)
+		rank_index = np.where(rank == i)[0][0]
+		#rank是尾节点实体根据曼哈顿距离进行排序后的下标的列表，
+		# rank_index是与第i个头节点对齐的实体排序的位置，也就是排在第几位。
+
+		mrr_sum_l = mrr_sum_l + 1.0/(rank_index+1)  # mrr：平均排序倒数
+
+		# 统计 正确的对齐实体排在第几位，hit_k
 		for j in range(len(top_k)):
 			if rank_index < top_k[j]:
 				top_lr[j] += 1
+
+
+	# 以尾节点为待对齐实体进行实验数据统计
 	mrr_sum_r = 0
 	top_rl = [0] * len(top_k)
 	right2left = dict()
@@ -701,12 +711,16 @@ def get_hits_select_ct(vec, test_pair, outfile, id2fre, theta_3, top_k=(1, 10, 5
 		for j in range(len(top_k)):
 			if rank_index < top_k[j]:
 				top_rl[j] += 1
+
+
 	print('For each left:')
 	outfile.write('For each left:\n')
 	for i in range(len(top_lr)):
 		print('Hits@%d: %.2f%%' % (top_k[i], top_lr[i] / len(test_pair) * 100))
 		outfile.write('Hits@%d: %.2f%%' % (top_k[i], top_lr[i] / len(test_pair) * 100) + '\n')
 	outfile.write("MRR: " + str(mrr_sum_l/len(test_pair)) + '\n')
+
+
 	print('For each right:')
 	outfile.write('For each right:\n')
 	for i in range(len(top_rl)):
@@ -714,13 +728,22 @@ def get_hits_select_ct(vec, test_pair, outfile, id2fre, theta_3, top_k=(1, 10, 5
 		outfile.write('Hits@%d: %.2f%%' % (top_k[i], top_rl[i] / len(test_pair) * 100) + '\n')
 	outfile.write("MRR: " + str(mrr_sum_r/len(test_pair)) + '\n')
 	outfile.flush()
+
+
+	# 利用简单扩增方式（迭代训练框架）选出高置信度的实体对添加到训练数据中。
+	# 也就是说，matched中是要加入训练集的数据。
 	matched = []
 	for item in left2right:
 		if left2right[item] not in right2left:
 			print('wtf')
 		else:
 			if right2left[left2right[item]] == item:
+				# 与头节点item最近的尾节点left2right[item]，
+				# 刚好与该尾节点最近的头节点也是 item
 				if id2fre[str(item)] >= theta_3:
+					# id2fre 记录实体的度
+					# 基于课程学习的迭代策略，
+					# 每次只选用实体节点的度大于theta_3的实体对加入训练集
 					matched.append((item, left2right[item]))
 	#print(matched)
 	print(len(matched))

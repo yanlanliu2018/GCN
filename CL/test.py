@@ -112,42 +112,42 @@ import numpy as np
 
 from scipy.spatial.distance import cdist
 
-vec = {1:[1,2,3],2:[4,5,6],3:[7,8,9],3:[10,11,12],4:[13,14,15],5:[16,17,18],6:[19,20,21]}
-test_pair = [[1,2],[1,4],[5,6]]
-
-test = np.array(test_pair)
-
-print(test)
-print(test.shape[0])
-
-Lvec = np.array([vec[e1] for e1, e2 in test_pair])
-Lid_record = np.array([e1 for e1, e2 in test_pair])
-Rvec = np.array([vec[e2] for e1, e2 in test_pair])
-Rid_record = np.array([e2 for e1, e2 in test_pair])
-
-sim = cdist(Lvec, Rvec, metric='cityblock')
-print(Lvec)
-print(Rvec)
-print(sim)
-
-print(sim[2, :])
-print(sim[2, :].argsort())
-
-for i in range(Lvec.shape[0]):
-    rank = sim[i, :].argsort()
-    rank_index = np.where(rank == i)[0][0]
-    r = np.where(rank==i)
-    rr = np.where(rank==i)[0]
-    print(rank == i)
-    print(np.where(rank == i)[0])
-    print(rank)
-    print(rank_index)
-
-top_k=(1, 10, 50, 100)
-top_lr = [0] * len(top_k)
-print(top_lr)
-
-print(test.shape[0])
+# vec = {1:[1,2,3],2:[4,5,6],3:[7,8,9],3:[10,11,12],4:[13,14,15],5:[16,17,18],6:[19,20,21]}
+# test_pair = [[1,2],[1,4],[5,6]]
+#
+# test = np.array(test_pair)
+#
+# print(test)
+# print(test.shape[0])
+#
+# Lvec = np.array([vec[e1] for e1, e2 in test_pair])
+# Lid_record = np.array([e1 for e1, e2 in test_pair])
+# Rvec = np.array([vec[e2] for e1, e2 in test_pair])
+# Rid_record = np.array([e2 for e1, e2 in test_pair])
+#
+# sim = cdist(Lvec, Rvec, metric='cityblock')
+# print(Lvec)
+# print(Rvec)
+# print(sim)
+#
+# print(sim[2, :])
+# print(sim[2, :].argsort())
+#
+# for i in range(Lvec.shape[0]):
+#     rank = sim[i, :].argsort()
+#     rank_index = np.where(rank == i)[0][0]
+#     r = np.where(rank==i)
+#     rr = np.where(rank==i)[0]
+#     print(rank == i)
+#     print(np.where(rank == i)[0])
+#     print(rank)
+#     print(rank_index)
+#
+# top_k=(1, 10, 50, 100)
+# top_lr = [0] * len(top_k)
+# print(top_lr)
+#
+# print(test.shape[0])
 
 # a = [0,2,3,2,1,2,4,5,6,7,8,6,5,4,3,2,7,8,9,6,5,7,8,9,6,9,1,2,2,5,6,8,8,9,7,0]
 # x = np.array(a)
@@ -161,3 +161,25 @@ print(test.shape[0])
 # digit_indices = [np.where(x == i)[0] for i in range(10)] #输出的是一个list，list里每个元素都是元组，元组里的第一个元素是list，具体看下面输出
 # print('digit_indices:', type(digit_indices))
 # print('digit_indices:', digit_indices)
+#
+# a = [10000]* (5)
+# print(a)
+#
+# ranks = [1,2,3,1,2,3,1,2,3,1]
+# ranks = np.array(ranks)
+# truth =  np.where(ranks==1)
+# truths = truth[0].tolist()
+# print(truth)
+# print(truths)
+
+probs = [[0,2,3],[1,3,2]]
+probs = np.array(probs)
+
+ind = np.argmax(probs, axis= 1)
+print(ind)
+
+maxes = np.max(probs, axis= 1)
+print(maxes)
+
+probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs)
+print(probs)

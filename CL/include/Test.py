@@ -5,7 +5,7 @@ import tensorflow as tf
 import copy
 
 def cal_performance(ranks, top=10):
-    m_r = sum(ranks) * 1.0 / len(ranks)  # m_r：
+    m_r = sum(ranks) * 1.0 / len(ranks)  # m_r：平均排序数
     h_10 = sum(ranks <= top) * 1.0 / len(ranks) # h_10: 前10个实体中包含正确实体的比例
     mrr = (1. / ranks).sum() / len(ranks)  # mrr：平均排序倒数
     return m_r, h_10, mrr
@@ -416,6 +416,7 @@ def get_hits_select_correct(vec, test_pair, dicrank, max_correct):
 
 	return ind, gap, truths, ranks,  ind_r, gap_r, truths_r, ranks_r
 
+# max_correct：测试集的长度，也就是能够正确对齐的最大数量
 def get_combine_hits_select_correct(vec, name_vec, test_pair, dicrank, max_correct):
 	Lvec = tf.placeholder(tf.float32, [None, 900])
 	Rvec = tf.placeholder(tf.float32, [None, 900])
@@ -449,13 +450,14 @@ def get_combine_hits_select_correct(vec, name_vec, test_pair, dicrank, max_corre
 	cannotmactch = [10000]* (len(test_pair) - max_correct) #### 好烦啊，这个其实不知道他已经没有对象了，但是为了方便计算才从全局角度知道没有对象，每一顿还得加入训练。。。
 	cannotmactch = np.array(cannotmactch)
 	ranks = np.append(ranks, cannotmactch)
+	# 将cannotmactch添加到ranks中 https://blog.csdn.net/weixin_42216109/article/details/93889047
 
 	truth =  np.where(ranks==1)
-	truths = truth[0].tolist()
-	ind = np.argmax(probs, axis= 1)[:max_correct]
+	truths = truth[0].tolist()  # ranks中值等于1的下标的列表，即test中能够找到正确实体对的头节点
+	ind = np.argmax(probs, axis= 1)[:max_correct] # 获取每一行中数值最大的下标，也就是被认为和头节点匹配的尾节点的下标
 	#ind = np.append(ind, np.array(cannotmactch))
 
-	maxes = np.max(probs, axis= 1)
+	maxes = np.max(probs, axis= 1) # 获取每一行的最大值
 	probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs)
 	maxes1 = np.max(probs, axis= 1)
 	gap = maxes-maxes1
@@ -636,6 +638,9 @@ def solely_measure(vec, test_pair, dim):
 	Lvec = tf.placeholder(tf.float32, [None, dim])
 	Rvec = tf.placeholder(tf.float32, [None, dim])
 
+
+	# 先对Lvec和Rvec进行L2范式的规范化，然后进行矩阵相乘，
+	# 相当于，计算了每个实体向量的之间的相似度，使用余弦相似度公式来计算
 	he = tf.nn.l2_normalize(Lvec, dim=-1) #??? 规范化啊
 	norm_e_em = tf.nn.l2_normalize(Rvec, dim=-1)
 	aep = tf.matmul(he, tf.transpose(norm_e_em)) # 两个矩阵相乘，得到的矩阵是：实体对个数*实体对个数
@@ -653,7 +658,7 @@ def solely_measure(vec, test_pair, dim):
 	# only rank those who have correspondings... cause the set is distorted for those above max_correct
 
 	# .sum(axis = 1) : 计算每一行的向量之和
-	ranks = (probs >= 0).sum(axis=1)  # 统计每一行值大于等于0的个数
+	ranks = (probs >= 0).sum(axis=1)  # 统计每一行值大于等于0的个数，相当于统计所有相似度大于可对齐实体对的个数。
 	print('to be evaluated... ' + str(len(ranks)))
 
 	MR, H10, MRR = cal_performance(ranks, top=10)

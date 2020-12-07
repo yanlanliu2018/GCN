@@ -33,7 +33,7 @@ def loadNe(path):
 
 		vect = np.fromstring(vect, sep=' ') # 将字符串以' '为分隔符构造矩阵，即词向量
 		vectors.append(vect)
-	embeddings = np.vstack(vectors)
+	embeddings = np.vstack(vectors) # 实体名的 vec 应该是按照id的顺序进行存储的
 	# 按垂直方向（行顺序）堆叠数组构成一个新的数组
 	# 也就是得到的新的矩阵：行-vectors.len，列-vect.len
 	return embeddings

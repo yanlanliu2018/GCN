@@ -172,14 +172,17 @@ from scipy.spatial.distance import cdist
 # print(truth)
 # print(truths)
 
-probs = [[0,2,3],[1,3,2]]
-probs = np.array(probs)
+# probs = [[0,2,3],[1,3,2],[3,4,-1]]
+# probs = np.array(probs)
+#
+# ind = np.argmax(probs, axis= 1)
+# print(ind)
+#
+# maxes = np.max(probs, axis= 1)
+# print(maxes)
+#
+# print(probs)
+# probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs)
+# print(probs)
 
-ind = np.argmax(probs, axis= 1)
-print(ind)
-
-maxes = np.max(probs, axis= 1)
-print(maxes)
-
-probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs)
-print(probs)
+assert 1 == 2

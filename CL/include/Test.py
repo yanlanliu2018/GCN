@@ -441,13 +441,17 @@ def get_combine_hits_select_correct(vec, name_vec, test_pair, dicrank, max_corre
 	aep = sess.run(aep, feed_dict = {Lvec: Lv, Rvec: Rv})
 	aep_n = sess.run(aep_n, feed_dict = {Lvec_ne: Lv_ne, Rvec_ne: Rv_ne})
 	alpha = 0.8
-	aep_fuse = aep*alpha+ aep_n*(1-alpha)
-	aep_fuse_r = aep_fuse.T
+	aep_fuse = aep*alpha+ aep_n*(1-alpha) # 每一行为头节点到所有尾节点的向量距离
+	aep_fuse_r = aep_fuse.T # 每一行为尾节点到所有头节点的向量距离
 
+
+	# 以头节点为待对齐节点，在尾节点中找到可对齐节点
 	probs = aep_fuse - aep_fuse[range(len(Lid_record)), range(len(Lid_record))].reshape(len(aep_fuse), 1)
 	# only rank those who have correspondings... cause the set is distorted for those above max_correct
 	ranks = (probs >= 0).sum(axis=1)[:max_correct]
-	cannotmactch = [10000]* (len(test_pair) - max_correct) #### 好烦啊，这个其实不知道他已经没有对象了，但是为了方便计算才从全局角度知道没有对象，每一顿还得加入训练。。。
+	cannotmactch = [10000]* (len(test_pair) - max_correct)
+	# 这个应该是没有的，因为在传入的参数中：max_correct=len(test_pair)
+	#### 好烦啊，这个其实不知道他已经没有对象了，但是为了方便计算才从全局角度知道没有对象，每一顿还得加入训练。。。(作者注解)
 	cannotmactch = np.array(cannotmactch)
 	ranks = np.append(ranks, cannotmactch)
 	# 将cannotmactch添加到ranks中 https://blog.csdn.net/weixin_42216109/article/details/93889047
@@ -458,13 +462,14 @@ def get_combine_hits_select_correct(vec, name_vec, test_pair, dicrank, max_corre
 	#ind = np.append(ind, np.array(cannotmactch))
 
 	maxes = np.max(probs, axis= 1) # 获取每一行的最大值
-	probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs)
-	maxes1 = np.max(probs, axis= 1)
-	gap = maxes-maxes1
+	probs[range(len(probs)),np.argmax(probs, axis= 1)] = np.min(probs) # 将每一行的最大值换成整个矩阵中的最小值
+	maxes1 = np.max(probs, axis= 1) # 获取每一行的最大值，也就是原始probs矩阵中每一行第二大的值
+	gap = maxes-maxes1  # probs中每一行最大值和第二大的值之间的差
 	gap = gap[:max_correct]
 
 	### pre
 	pre = []
+	# 第一次dicrank传入的是个空集合
 	for ent in dicrank.keys():
 		pre.append(dicrank[ent])
 	pre = np.array(pre)
@@ -478,6 +483,7 @@ def get_combine_hits_select_correct(vec, name_vec, test_pair, dicrank, max_corre
 	print('\n'+msg)
 
 	# right
+	# 以尾节点为待对齐节点在头节点中找到可对齐节点
 	probs = aep_fuse_r - aep_fuse_r[range(len(Lid_record)), range(len(Lid_record))].reshape(len(aep_fuse_r), 1)
 	ranks_r = (probs >= 0).sum(axis=1)[:max_correct]
 	truth_r =  np.where(ranks_r==1)

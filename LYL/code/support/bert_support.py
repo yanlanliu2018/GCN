@@ -28,11 +28,11 @@ class BertSupport:
         sim = 0.5 + 0.5 * cos
         return sim
 
-    def word_list_vector(self,wordList):
+    def word_list_vector2(self,wordList):
         a = self.bc.encode(wordList)
-        d = {}
+        d = []
         for i in range(a.__len__()):
-            d[wordList[i]] = np.mat(a[i])
+            d.append(np.mat(a[i]))
         return d
 
     def compute_distance(self, word1, word2):

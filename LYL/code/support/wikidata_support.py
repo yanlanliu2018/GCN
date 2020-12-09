@@ -30,17 +30,18 @@ def get_label(id):
       FILTER (langMatches( lang(?label), "EN" ) )
     }"""
 
-    res = return_sparql_query_results(query_string)
+    print(id)
+    result = ""
+    try:
+        res = return_sparql_query_results(query_string)
+    except Exception as e:
+        print(e)
+    else:
+        print(res["results"]["bindings"])
+        if (res["results"]["bindings"].__len__() != 0):
+            result = res["results"]["bindings"][0]['label']['value']
 
-    result = res["results"]["bindings"][0]['label']['value']
-    # print(result)
     return result
-
-    # for row in res["results"]["bindings"]:
-    #     print(row)
-    #     print(row.__class__)
-    #     print(row['label']['value'])
-        # print(row["value"])
 
 # 获取实验中 wikidata 数据需要的实体名和属性名
 # 以 {"P373":"Commons category",......}的形式存储，使用json进行序列化
@@ -48,19 +49,40 @@ def getAllEntAndProName(inPaths,outPath):
     id_name = dict()
 
     for path in inPaths:
-        with open(path,'r','utf-8') as file:
+        with open(path,'r',encoding='utf-8') as file:
+            nullNum = 0
+            num = 0
             for line in file:
-                id = line.split('\t')[1].split('/')[-1]
+                num += 1
+                print(line)
+                id = line.split('\t')[1].split('/')[-1].split('\n')[0]
                 name = get_label(id)
-                dict[id]=name
+                id_name[id]=name
+
+                if(name==""):
+                    nullNum += 1
+                    print("一共有" + str(nullNum) + "个数据是空值。")
+
+                print(name)
+                print("已经处理了"+str(num) + "条数据！")
+
+            print("一共有" + str(nullNum) + "个数据是空值。")
 
 
     with open(outPath, 'w', encoding='UTF-8') as f:
         json.dump(id_name, f, ensure_ascii=False)
 
+    print("数据处理结束！")
+
 
 if __name__=="__main__":
     # print(get_label("P373"))
-    inpaths = ["",""]
-    outpath = ""
+    inpaths = ["../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2"] # "../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2",
+    outpath = "../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json"
     getAllEntAndProName(inpaths,outpath)
+    # path = "../../data/dbp_wd_15k_V1/mapping/0_3/rel_ids_2"
+    # file = open(path,'r',encoding='utf-8')
+    # num = 0
+    # while num<10:
+    #     print(file.readline())
+    #     num+=1

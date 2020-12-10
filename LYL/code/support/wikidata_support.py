@@ -36,6 +36,9 @@ def get_label(id):
         res = return_sparql_query_results(query_string)
     except Exception as e:
         print(e)
+        result = " "
+        # 用来区别错误导致的值缺失还是本身缺失，
+        # “” ： 本身缺失； “ ”：错误导致的缺失
     else:
         print(res["results"]["bindings"])
         if (res["results"]["bindings"].__len__() != 0):
@@ -59,7 +62,7 @@ def getAllEntAndProName(inPaths,outPath):
                 name = get_label(id)
                 id_name[id]=name
 
-                if(name==""):
+                if(name=="" or name==" "):
                     nullNum += 1
                     print("一共有" + str(nullNum) + "个数据是空值。")
 
@@ -74,15 +77,56 @@ def getAllEntAndProName(inPaths,outPath):
 
     print("数据处理结束！")
 
+# 对于在getAllEntAndProName 中获取失败的信息进行重试补充
+def supplementary_information(inPath):
+    file = open(inPath,'r',encoding='utf-8')
+    id_name = json.load(file)
+    file.close()
+
+    nullCount = 0 # 用来记录一共有多少个是空值“”
+    lastNullCount = 0 # 用来记录有多少个依然为空值(由于错误导致的）
+
+    for key,value in id_name.items():
+        if(value == " "):
+            nullCount += 1
+            print("已经处理了"+ str(nullCount) + "条数据！")
+            nameString = get_label(key)
+            if(nameString == " "):
+                lastNullCount += 1
+            id_name[key] = nameString
+
+    with open(inPath, 'w', encoding='UTF-8') as f:
+        json.dump(id_name, f, ensure_ascii=False)
+
+    print("一共有" + str(nullCount) + "条数据被处理。")
+    print("还剩" + str(lastNullCount) + "条数据需要处理。")
+    print("数据处理结束！")
+
+def get_null_num(inPath):
+    file = open(inPath, 'r', encoding='utf-8')
+    id_name = json.load(file)
+    file.close()
+
+    nullCount = 0  # 用来记录一共有多少个是空值“ ”
+    lastNullCount = 0  # 用来记录有多少个依然为空值(由于错误导致的）
+
+    for key,value in id_name.items():
+        if(value == ""):
+            nullCount += 1
+            print("已经处理了"+ str(nullCount) + "条数据！")
+            nameString = get_label(key)
+            if(nameString == " "):
+                lastNullCount += 1
+            id_name[key] = nameString
+
+    with open(inPath, 'w', encoding='UTF-8') as f:
+        json.dump(id_name, f, ensure_ascii=False)
 
 if __name__=="__main__":
     # print(get_label("P373"))
-    inpaths = ["../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2"] # "../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2",
-    outpath = "../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json"
-    getAllEntAndProName(inpaths,outpath)
-    # path = "../../data/dbp_wd_15k_V1/mapping/0_3/rel_ids_2"
-    # file = open(path,'r',encoding='utf-8')
-    # num = 0
-    # while num<10:
-    #     print(file.readline())
-    #     num+=1
+
+    # inpaths = ["../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2"] # "../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2",
+    # outpath = "../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json"
+    # getAllEntAndProName(inpaths,outpath)
+
+    supplementary_information("../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json")

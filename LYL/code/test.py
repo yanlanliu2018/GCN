@@ -13,11 +13,38 @@
 # for i in range(len(lines)):
 #     print(i)
 
-id_name = dict()
-id = "345"
-name = "hahah"
-id_name[id] = name
+# id_name = dict()
+# id = "345"
+# name = "hahah"
+# id_name[id] = name
+#
+#
+# l = [1,2,3]
+# print(l.__len__())
 
+# di = {"1":1,"2":2}
+# for key,value in di.items():
+#     if(value == 2):
+#         di[key] = value*2
+#
+# for key,value in di.items():
+#     print(key)
+#     print(value)
+#     print("...............................")
 
-l = [1,2,3]
-print(l.__len__())
+import requests
+
+API_ENDPOINT = "https://www.wikidata.org/w/api.php"
+
+query = "Q84287"
+
+params = {
+    'action': 'wbsearchentities',
+    'format': 'json',
+    'language': 'en',
+    'search': query
+}
+
+r = requests.get(API_ENDPOINT, params = params)
+
+print(r.json()['search'][0])

@@ -28,7 +28,7 @@ class BertSupport:
         sim = 0.5 + 0.5 * cos
         return sim
 
-    def word_list_vector2(self,wordList):
+    def word_list_vector(self,wordList):
         a = self.bc.encode(wordList)
         d = []
         for i in range(a.__len__()):

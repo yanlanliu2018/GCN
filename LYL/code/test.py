@@ -32,19 +32,22 @@
 #     print(value)
 #     print("...............................")
 
-import requests
+# import requests
+#
+# API_ENDPOINT = "https://www.wikidata.org/w/api.php"
+#
+# query = "Q84287"
+#
+# params = {
+#     'action': 'wbsearchentities',
+#     'format': 'json',
+#     'language': 'en',
+#     'search': query
+# }
+#
+# r = requests.get(API_ENDPOINT, params = params)
+#
+# print(r.json()['search'][0])
 
-API_ENDPOINT = "https://www.wikidata.org/w/api.php"
-
-query = "Q84287"
-
-params = {
-    'action': 'wbsearchentities',
-    'format': 'json',
-    'language': 'en',
-    'search': query
-}
-
-r = requests.get(API_ENDPOINT, params = params)
-
-print(r.json()['search'][0])
+for i in range(5):
+    print(i)

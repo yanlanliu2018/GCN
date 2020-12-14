@@ -1,4 +1,6 @@
 import json
+import pickle
+
 from LYL.code.support.Config import Config
 from LYL.code.support.bert_support import BertSupport
 
@@ -36,14 +38,28 @@ def get_name_strAndVec():
 
         num+=1
         if(num%1000 == 0):
-            print("已经获取了" + num +"条数据的实体名向量。")
-            nameList.append(namelist)
-            vecList.append(BertSupport().word_list_vector(wordList=namelist))
+            print("已经获取了" + str(num) +"条数据的实体名向量。")
+            nameList = nameList + namelist
+            vecList = vecList + (BertSupport().word_list_vector(wordList=namelist))
 
             namelist = []
 
+    print("idList len"+str(idList.__len__()))
+    print("nameList len" + str(nameList.__len__()))
+    print("vecList len" + str(vecList.__len__()))
+
     for i in range(len(idList)):
-        id_name[idList[i]] = [nameList[i],vecList[i]]
+        try:
+            id_name[idList[i]] = [nameList[i],vecList[i]]
+        except Exception as e:
+            print(e)
+            print(i)
+            print(idList[i])
+            print(nameList[i])
+            print(vecList[i])
+
+
+    print("id_name len" + str(len(id_name)))
 
     print("文件-" + path1 + "-获取实体名向量结束！")
 
@@ -77,9 +93,9 @@ def get_name_strAndVec():
 
             num += 1
             if (num % 1000 == 0):
-                print("已经获取了" + num + "条数据的实体名向量。")
-                nameList.append(namelist)
-                vecList.append(BertSupport().word_list_vector(wordList=namelist))
+                print("已经获取了" + str(num) + "条数据的实体名向量。")
+                nameList = nameList + namelist
+                vecList = vecList + BertSupport().word_list_vector(wordList=namelist)
 
                 namelist = []
     else:
@@ -94,25 +110,57 @@ def get_name_strAndVec():
 
             num += 1
             if (num % 1000 == 0):
-                print("已经获取了" + num + "条数据的实体名向量。")
-                nameList.append(namelist)
-                vecList.append(BertSupport().word_list_vector(wordList=namelist))
+                print("已经获取了" + str(num) + "条数据的实体名向量。")
+                nameList = nameList + namelist
+                vecList = vecList + BertSupport().word_list_vector(wordList=namelist)
 
                 namelist = []
 
-    for i in range(len(idList)):
-        id_name[idList[i]] = [nameList[i], vecList[i]]
+    print("idList len" + str(idList.__len__()))
+    print("nameList len" + str(nameList.__len__()))
+    print("vecList len" + str(vecList.__len__()))
 
-    print("文件-" + path1 + "-获取实体名向量结束！")
+    for i in range(len(idList)):
+        try:
+            id_name[idList[i]] = [nameList[i], vecList[i]]
+        except Exception as e:
+            print(e)
+            print(i)
+            print(idList[i])
+            print(nameList[i])
+            print(vecList[i])
+
+
+    print("id_name len" + str(len(id_name)))
+
+    print("文件-" + path2 + "-获取实体名向量结束！")
 
     print("对实体名向量进行序列化，序列化格式：{id:[name,name_cev]}")
     # 将获取到的实体名的向量表示以json文档的形式序列化
-    file = '../../data/'+ Config.language + '/mapping/0_3/name_vec_cpm_3.json'
-    with open(file, 'w', encoding='UTF-8') as f:
-        json.dump(id_name, f, ensure_ascii=False)
+    file = '../../data/'+ Config.language + '/mapping/0_3/name_vec_cpm_3.txt'
+    # with open(file, 'w', encoding='UTF-8') as f:
+    #     json.dump(id_name, f, ensure_ascii=False)
+    with open(file, "wb") as f:
+        pickle.dump(id_name, f)
     print("序列化结束！")
+
+
+# with open("word2int.txt", "wb") as f:
+#     pickle.dump(word2int,f)
+# with open("word2int.txt", "rb+") as f:
+#     d = pickle.load(f)
+
 
 
 if __name__ == "__main__":
     get_name_strAndVec()
 
+    # file = '../../data/' + Config.language + '/mapping/0_3/name_vec_cpm_3.txt'
+    # with open(file, "rb+") as f:
+    #     d = pickle.load(f)
+    #     num = 0
+    #     for key,value in d.items():
+    #         num+=1
+    #         if(num<6):
+    #             print(key)
+    #             print(value)

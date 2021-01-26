@@ -1,8 +1,10 @@
-from CL.include.Config import Config
-import tensorflow as tf
-from CL.include.Model import build_SE, training, combine
-from CL.include.Test import get_hits, get_hits_select, get_combine_hits_select_correct, solely_measure
-from CL.include.Load import *
+from LYL.include.Config import Config
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+from LYL.include.Model import build_SE, training, combine
+from LYL.include.Test import get_hits, get_hits_select, get_combine_hits_select_correct, solely_measure
+from LYL.include.Load import *
 import copy
 import numpy as np
 import math
@@ -13,7 +15,7 @@ import pickle
 def id2degree():
 	path = './data/' + Config.language + '/mapping/0_3/triples_1'
 	inf2 = open(path)
-	id2fre = dict()  # 用来记录实体节点的度（包括入度和出度）
+	id2fre = dict()  # 用来记录实体节点的度（包括入度和出度）  {节点id：度，。。。}
 	for line in inf2:
 		strs = line.strip().split('\t')  # 23883	157	2572，实体id-关系id-实体id
 
@@ -110,7 +112,7 @@ np.random.seed(seed)  # 每次使用相同的随机数种子seed，则生成的�
 tf.set_random_seed(seed) # 与前面的效果相同
 
 if __name__ == '__main__':
-	id2fre = id2degree()
+	id2fre = id2degree() ##只对知识库1的数据进行度的统计
 	e = len(set(loadfile(Config.e1, 1)) | set(loadfile(Config.e2, 1))) # 获取并集，也就是两个图谱中的所有实体id，用一个list存储。
 	ILL = loadfile(Config.ill, 2) # 将可对齐实体对加载到list中，[[e11,e21],[e12,e22]]
 	illL = len(ILL)
@@ -122,29 +124,38 @@ if __name__ == '__main__':
 	test = ILL[int(math.floor(illL* (Config.seed + 0.07))):] #测试数据取剩余数据
 
 	KG1 = loadfile(Config.kg1, 3) ; KG2 = loadfile(Config.kg2, 3) #加载图谱的三元组数据，[[实体id，关系id，实体id]...]
-	storepath = Config.language + '/'
+	storepath = './result/' + Config.language + '/'
 	#np.save(storepath + 'train.npy', train_array); np.save(storepath + 'test.npy', test)  # 将数组以二进制格式保存在“.npy”文件中。
 	outfile = open(storepath+ 'record.txt', 'w')  # 创建输出文件“record.txt”
 
+
 	print('LOAD NE...')
 	print('Result of NE:')
-	#outfile.write('Result of NE:\n')
+	outfile.write('Result of NE:\n')
 	nepath = './data/'+ Config.language + '/mapping/0_3/name_vec_cpm_3.txt'  #Ne（Name_embedding)的向量文件，
 	ne_vec = loadNe(nepath)  # 加载实体名向量所在文件，获取向量矩阵
-	#np.save(storepath + '/ne_vec.npy', ne_vec)  # 以文件的形式保存数组
-	solely_measure(ne_vec, test, 900) # 单独测量，也就是测量只使用实体名向量来进行对齐的效果
+	np.save(storepath + '/ne_vec.npy', ne_vec)  # 以文件的形式保存数组
+	solely_measure(ne_vec, test, 768) # 单独测量，也就是测量只使用实体名向量来进行对齐的效果
+
+	print('LOAD ASE...')
+	print('Result of ASE:')
+	outfile.write('Result of ASE:\n')
+	asepath = './data/' + Config.language + '/attr_vect_cpm.txt'  # Ase（Attr_string_embedding)的向量文件，
+	ase_vec = loadAse(asepath)  # 加载实体属性文本向量所在文件，获取向量矩阵
+	np.save(storepath + '/ase_vec.npy', ase_vec)  # 以文件的形式保存数组
+	solely_measure(ase_vec, test, 768)  # 单独测量，也就是测量只使用实体名向量来进行对齐的效果
 
 	# build
 	ite_counter = 0
 	output_layer, loss = build_SE(Config.se_dim, Config.act_func, Config.gamma, Config.k, e, train_array, KG1 + KG2)
 	se_vec, J = training(output_layer, loss, 25, Config.epochs_se, train_array, e, Config.k)
 	print('loss:', J)
-	np.save(storepath+ 'se_vec_test_ini.npy', se_vec)
+	# np.save(storepath+ 'se_vec_test_ini.npy', se_vec)
 	se_vec = np.load(storepath+ 'se_vec_test_ini.npy')
 
 	print('Result of SE:')
 	#outfile.write('Result of SE:\n')
-	#solely_measure(se_vec, test, 900)
+	solely_measure(se_vec, test, 768)
 	#outfile.flush()
 
 	dicrank = dict()
@@ -152,6 +163,7 @@ if __name__ == '__main__':
 	# gap1：probs中每一行最大值和第二大的值之间的差，即与头节点之间的距离最近的尾节点和第二近尾节点之间的相似度之差（距离之差）
 	# truths1：能够找到正确实体对的头节点的下标值
 	# ranks1：可正确对齐的尾节点在相似度中的排序值
+	# 作用：
 	index1, gap1, truths1, ranks1, index2, gap2, truths2, ranks2 = get_combine_hits_select_correct(se_vec, ne_vec, test, dicrank, len(test))
 
 

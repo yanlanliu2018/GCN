@@ -1,5 +1,6 @@
 #！/usr/bin/env python
 #-*-coding:utf-8-*-
+import pickle
 
 import requests
 
@@ -46,8 +47,8 @@ def get_label(id):
 
     return result
 
-# 获取实验中 wikidata 数据需要的实体名和属性名
-# 以 {"P373":"Commons category",......}的形式存储，使用json进行序列化
+# 获取实验中 wikidata 数据需要的实体名
+# 以 {"Q216789":"Commons category",......}的形式存储，使用json进行序列化
 def getAllEntAndProName(inPaths,outPath):
     id_name = dict()
 
@@ -74,6 +75,45 @@ def getAllEntAndProName(inPaths,outPath):
 
     with open(outPath, 'w', encoding='UTF-8') as f:
         json.dump(id_name, f, ensure_ascii=False)
+
+    print("数据处理结束！")
+
+# 获取实验中 wikidata 数据需要的属性名
+# 以 {"P373":"Commons category",......}的形式存储，使用json进行序列化
+def getAllAttrName(inPath,outPath,attrIdsPath):
+    id_attrName = dict()
+    attrIds = set()
+
+    # 遍历attr_tripples_2文件，获取所有不重复的属性id
+    with open(inPath, 'r', encoding='utf-8') as file:
+        num = 0
+        for line in file:
+            num += 1
+            id = line.split('\t')[1].split('/')[-1].split('\n')[0]
+            print(id)
+            attrIds.add(id)
+        print('一共有'+str(num)+'个属性三元组！')
+        print('一共有'+str(attrIds.__len__())+'个属性！')
+
+    with open(attrIdsPath, 'wb') as f:
+        pickle.dump(attrIds, f)
+
+    num = 0
+    nullNum = 0
+    for id in attrIds:
+        num +=1
+        attrName = get_label(id)
+        id_attrName[id] = attrName
+        if (attrName == "" or attrName == " "):
+            nullNum += 1
+            print("一共有" + str(nullNum) + "个数据是空值。")
+
+        print(id +" "+ attrName)
+        print("已经处理了" + str(num) + "条数据！")
+    print("一共有" + str(nullNum) + "个数据是空值。")
+
+    with open(outPath, 'w', encoding='UTF-8') as f:
+        json.dump(id_attrName, f, ensure_ascii=False)
 
     print("数据处理结束！")
 
@@ -125,8 +165,17 @@ def get_null_num(inPath):
 if __name__=="__main__":
     # print(get_label("P373"))
 
-    # inpaths = ["../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2"] # "../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2",
+    # inpaths = ["../../data/dbp_wd_15k_V1/mapping/0_3/ent_ids_2"]
     # outpath = "../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json"
     # getAllEntAndProName(inpaths,outpath)
+    #
+    # supplementary_information("../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json")
 
-    supplementary_information("../../data/dbp_wd_15k_V1/mapping/0_3/ent_string_2.json")
+    inpath = "../../data/dbp_wd_15k_V1/attr_triples_2"
+    outPath = "../../data/dbp_wd_15k_V1/attr_string_2.json"
+    attrIdsPath = "../../data/dbp_wd_15k_V1/attrIds.pickle"
+
+    # getAllAttrName(inPath=inpath,outPath=outPath,attrIdsPath=attrIdsPath)
+
+    # supplementary_information(outPath)
+    get_null_num(outPath)

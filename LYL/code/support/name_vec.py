@@ -136,13 +136,11 @@ def get_name_strAndVec():
     print("文件-" + path2 + "-获取实体名向量结束！")
 
     print("对实体名向量进行序列化，序列化格式：{id:[name,name_cev]}")
-    # 将获取到的实体名的向量表示以json文档的形式序列化
+    # 将获取到的实体名的向量表示以pickle文档的形式序列化
     file = '../../data/'+ Config.language + '/mapping/0_3/name_vec_cpm_3.txt'
-    # with open(file, 'w', encoding='UTF-8') as f:
-    #     json.dump(id_name, f, ensure_ascii=False)
-    with open(file, "wb") as f:
-        pickle.dump(id_name, f)
-    print("序列化结束！")
+    # with open(file, "wb") as f:
+    #     pickle.dump(id_name, f)
+    # print("序列化结束！")
 
 
 # with open("word2int.txt", "wb") as f:
